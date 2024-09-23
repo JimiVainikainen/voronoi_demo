@@ -24,7 +24,7 @@ class App
         std::vector<std::pair<double,double>> circumcenters;
         std::vector<Circle> circumCenterCircles;
         std::vector<Edge> voronoiEdges;
-
+        std::vector<Polygon> voronoiPolygons;
         int triangleCount;
     public:
         App();

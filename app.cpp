@@ -88,6 +88,7 @@ bool App::OnInit()
     circumcenters = std::vector<std::pair<double,double>>();
     circumCenterCircles = std::vector<Circle>();
     voronoiEdges = std::vector<Edge>();
+    voronoiPolygons = std::vector<Polygon>();
     for(std::size_t i = 0;i<d.triangles.size();i+=3)
     {
         int a = 2* d.triangles[i];
@@ -116,6 +117,12 @@ bool App::OnInit()
     {
         // INDECES OF ADJACENT TRIANGLES
         std::vector<size_t> adjacentTriangles = AdjacentTriangles(d,i);
+        Polygon polygon = Polygon();
+        polygon.edges = std::vector<Edge>();
+        SDL_Point p = SDL_Point();
+        p.x = circumcenters.at(i).first;
+        p.y = circumcenters.at(i).second;
+        polygon.center = p;
         for(size_t index = 0;index < adjacentTriangles.size();index++)
         {
             
@@ -129,10 +136,10 @@ bool App::OnInit()
                 line.point_b.x = circumcenters.at(adjacentTriangles.at(index)).first;
                 line.point_b.y = circumcenters.at(adjacentTriangles.at(index)).second;
                 voronoiEdges.push_back(line);
-                
-                
+                polygon.edges.push_back(line);
             }
         }
+        voronoiPolygons.push_back(polygon);
     }
 
     return true;
@@ -151,7 +158,7 @@ void App::OnLoop()
 {    
     for(int i=4;i<CIRCLECOUNT;i++)
     {
-        points[i].move();
+        //points[i].move();
     }
     
     triangles = std::vector<Triangle>();
@@ -195,6 +202,12 @@ void App::OnLoop()
     {
         // INDECES OF ADJACENT TRIANGLES
         std::vector<size_t> adjacentTriangles = AdjacentTriangles(d,i);
+        Polygon polygon = Polygon();
+        polygon.edges = std::vector<Edge>();
+        SDL_Point p = SDL_Point();
+        p.x = circumcenters.at(i).first;
+        p.y = circumcenters.at(i).second;
+        polygon.center = p;
         for(size_t index = 0;index < adjacentTriangles.size();index++)
         {
             
@@ -208,10 +221,11 @@ void App::OnLoop()
                 line.point_b.x = circumcenters.at(adjacentTriangles.at(index)).first;
                 line.point_b.y = circumcenters.at(adjacentTriangles.at(index)).second;
                 voronoiEdges.push_back(line);
-                
+                polygon.edges.push_back(line);
                 
             }
         }
+        voronoiPolygons.push_back(polygon);
     }
 }
 
@@ -220,20 +234,34 @@ void App::OnRender()
     SDL_SetRenderDrawColor(renderer,0,0,0,255);
     SDL_RenderClear(renderer);
     
-    SDL_SetRenderDrawColor(renderer,255,255,255,255);
+    SDL_SetRenderDrawColor(renderer,255,0,255,255);
+
+    for(std::size_t j = 0;j < 1;j++)
+    {
+        for(std::size_t i = 0; i < voronoiPolygons.at(j).edges.size();i++)
+        {
+            SDL_DrawEdge(renderer,voronoiPolygons.at(j).edges.at(i));
+        }
+    }
 
     std::cout<<voronoiEdges.size() << std::endl;
     for(std::size_t i=0;i<voronoiEdges.size();i++)
     {
         SDL_DrawEdge(renderer,voronoiEdges.at(i));
     }
-
+    SDL_SetRenderDrawColor(renderer,255,255,255,255);
+    for(std::size_t i = 0;i<triangles.size();i++)
+    {
+        SDL_DrawTriangle(renderer,triangles.at(i));
+    }
     // Uncomment if you want to draw circles at circumcenters
-    // for(std::size_t i=0;i<circmuCenterCircles.size();i++)
-    // {
-    //     SDL_DrawCircle(renderer,circmuCenterCircles.at(i));
-    // }
+    SDL_SetRenderDrawColor(renderer,255,255,0,255);
+    for(std::size_t i=0;i<circumCenterCircles.size();i++)
+    {
+        SDL_DrawCircle(renderer,circumCenterCircles.at(i));
+    }
     // RENDER CIRCLES
+    SDL_SetRenderDrawColor(renderer,255,255,255,255);
     for (int i=0;i<CIRCLECOUNT;i++)
     {
         SDL_DrawCircle(renderer,points[i]);

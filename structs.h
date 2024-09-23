@@ -67,4 +67,10 @@ typedef struct
     
 } Triangle;
 
+typedef struct
+{
+    std::vector<Edge> edges;
+    SDL_Point center;
+} Polygon;
+
 #endif
