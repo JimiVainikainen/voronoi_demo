@@ -222,7 +222,7 @@ void App::OnRender()
     
     SDL_SetRenderDrawColor(renderer,255,255,255,255);
 
-
+    std::cout<<voronoiEdges.size() << std::endl;
     for(std::size_t i=0;i<voronoiEdges.size();i++)
     {
         SDL_DrawEdge(renderer,voronoiEdges.at(i));
