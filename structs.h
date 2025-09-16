@@ -12,7 +12,7 @@ typedef struct
     int max_y = 0;
     double x;
     double y;
-    int radius;
+    int radius = 5;
     SDL_Point *points;
     int target_x = 0;
     int target_y = 0;

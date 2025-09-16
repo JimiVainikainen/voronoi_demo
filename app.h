@@ -8,11 +8,11 @@
 #include <array>
 class App
 {
-
+    // this is a learning experience based on this site: https://mapbox.github.io/delaunator/
     public:
         const int WIDTH = 1080;
         const int HEIGHT = 720;
-        const int CIRCLECOUNT = 100;
+        const int CIRCLECOUNT = 7;
         const char* APPNAME = "Voronoi demo";
         SDL_Window *window;
         SDL_Renderer *renderer;
@@ -57,6 +57,7 @@ class App
         {
             return (e % 3 == 0 ? e+2 : e-1);
         }; // return index of prev edge
+        std::vector<std::size_t> AssociatedTriangles(Circle point);
         
 };
 #endif

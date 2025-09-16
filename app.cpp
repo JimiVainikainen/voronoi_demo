@@ -117,12 +117,12 @@ bool App::OnInit()
     {
         // INDECES OF ADJACENT TRIANGLES
         std::vector<size_t> adjacentTriangles = AdjacentTriangles(d,i);
-        Polygon polygon = Polygon();
-        polygon.edges = std::vector<Edge>();
-        SDL_Point p = SDL_Point();
-        p.x = circumcenters.at(i).first;
-        p.y = circumcenters.at(i).second;
-        polygon.center = p;
+        //Polygon polygon = Polygon();
+        //polygon.edges = std::vector<Edge>();
+        //SDL_Point p = SDL_Point();
+        //p.x = circumcenters.at(i).first;
+        //p.y = circumcenters.at(i).second;
+        //polygon.center = p;
         for(size_t index = 0;index < adjacentTriangles.size();index++)
         {
             
@@ -136,10 +136,10 @@ bool App::OnInit()
                 line.point_b.x = circumcenters.at(adjacentTriangles.at(index)).first;
                 line.point_b.y = circumcenters.at(adjacentTriangles.at(index)).second;
                 voronoiEdges.push_back(line);
-                polygon.edges.push_back(line);
+                //polygon.edges.push_back(line);
             }
         }
-        voronoiPolygons.push_back(polygon);
+        //voronoiPolygons.push_back(polygon);
     }
 
     return true;
@@ -173,7 +173,7 @@ void App::OnLoop()
     circumcenters = std::vector<std::pair<double,double>>();
     circumCenterCircles = std::vector<Circle>();
     voronoiEdges = std::vector<Edge>();
-    
+    voronoiPolygons = std::vector<Polygon>();
     for(std::size_t i = 0;i<d.triangles.size();i+=3)
     {
         int a = 2* d.triangles[i];
@@ -202,12 +202,12 @@ void App::OnLoop()
     {
         // INDECES OF ADJACENT TRIANGLES
         std::vector<size_t> adjacentTriangles = AdjacentTriangles(d,i);
-        Polygon polygon = Polygon();
-        polygon.edges = std::vector<Edge>();
-        SDL_Point p = SDL_Point();
-        p.x = circumcenters.at(i).first;
-        p.y = circumcenters.at(i).second;
-        polygon.center = p;
+        //Polygon polygon = Polygon();
+        //polygon.edges = std::vector<Edge>();
+        //SDL_Point p = SDL_Point();
+        // p.x = circumcenters.at(i).first;
+        // p.y = circumcenters.at(i).second;
+        //polygon.center = p;
         for(size_t index = 0;index < adjacentTriangles.size();index++)
         {
             
@@ -221,12 +221,68 @@ void App::OnLoop()
                 line.point_b.x = circumcenters.at(adjacentTriangles.at(index)).first;
                 line.point_b.y = circumcenters.at(adjacentTriangles.at(index)).second;
                 voronoiEdges.push_back(line);
-                polygon.edges.push_back(line);
+                //polygon.edges.push_back(line);
                 
+                //voronoiPolygons.push_back(polygon);
             }
         }
-        voronoiPolygons.push_back(polygon);
     }
+    // for every point, get connected triangles
+    // connected triangle means one of the lines' point is the current point
+    // the connected triangles's circumcenters form the polygon
+    for (std::size_t currentPoint = 0;currentPoint < CIRCLECOUNT;currentPoint++)
+    {
+        // connected triangles:
+        Polygon polygon = Polygon();
+        polygon.edges = std::vector<Edge>();
+        SDL_Point p = SDL_Point();
+        p.x = circumcenters.at(currentPoint).first;
+        p.y = circumcenters.at(currentPoint).second;
+        polygon.center = p;
+        std::vector<std::size_t>connectedTriangles = std::vector<std::size_t>();
+        for (std::size_t triangleIndex = 0; triangleIndex < triangles.size();triangleIndex++)
+        {
+            // check all the points in triangle
+            Circle point = points[currentPoint];
+            Triangle currentTriangle = triangles.at(triangleIndex);
+            if(point.x == currentTriangle.a.x && point.y == currentTriangle.a.y)
+            {
+                connectedTriangles.push_back(triangleIndex);
+            }
+            else if(point.x == currentTriangle.b.x && point.y == currentTriangle.b.y)
+            {
+                connectedTriangles.push_back(triangleIndex);
+            }
+            else if(point.x == currentTriangle.b.x && point.y == currentTriangle.b.y)
+            {
+                connectedTriangles.push_back(triangleIndex);
+            }
+        }
+        for(std::size_t connectedTrianglesIndex = 0; connectedTrianglesIndex < connectedTriangles.size();connectedTrianglesIndex++)
+        {
+            Edge e = Edge();
+            SDL_Point point_a = SDL_Point();
+            point_a.x = circumcenters.at(connectedTriangles.at(connectedTrianglesIndex)).first;
+            point_a.x = circumcenters.at(connectedTriangles.at(connectedTrianglesIndex)).second;
+            SDL_Point point_b = SDL_Point();
+            if(connectedTrianglesIndex == connectedTriangles.size() - 1 )
+            {
+                point_b.x = circumcenters.at(connectedTriangles.at(0)).first;
+                point_b.x = circumcenters.at(connectedTriangles.at(0)).second;
+            }else
+            {
+                point_b.x = circumcenters.at(connectedTriangles.at(connectedTrianglesIndex) + 1).first;
+                point_b.x = circumcenters.at(connectedTriangles.at(connectedTrianglesIndex) + 1).second;
+            }
+            
+            e.point_a = point_a;
+            e.point_b = point_b;
+            polygon.edges.push_back(e);
+        }
+        voronoiPolygons.push_back(polygon);
+        // loop through triangle's circumcenters
+    }
+    std::cout<<voronoiPolygons.size()<<std::endl;
 }
 
 void App::OnRender()
@@ -234,9 +290,9 @@ void App::OnRender()
     SDL_SetRenderDrawColor(renderer,0,0,0,255);
     SDL_RenderClear(renderer);
     
-    SDL_SetRenderDrawColor(renderer,255,0,255,255);
+    SDL_SetRenderDrawColor(renderer,50,50,255,255);
 
-    for(std::size_t j = 0;j < 1;j++)
+    for(std::size_t j = 0;j < voronoiPolygons.size();j++)
     {
         for(std::size_t i = 0; i < voronoiPolygons.at(j).edges.size();i++)
         {
@@ -244,11 +300,12 @@ void App::OnRender()
         }
     }
 
-    std::cout<<voronoiEdges.size() << std::endl;
-    for(std::size_t i=0;i<voronoiEdges.size();i++)
-    {
-        SDL_DrawEdge(renderer,voronoiEdges.at(i));
-    }
+    //std::cout<<voronoiEdges.size() << std::endl;
+    // SDL_SetRenderDrawColor(renderer,100,0,100,255);
+    // for(std::size_t i=0;i<voronoiEdges.size();i++)
+    // {
+    //     SDL_DrawEdge(renderer,voronoiEdges.at(i));
+    // }
     SDL_SetRenderDrawColor(renderer,255,255,255,255);
     for(std::size_t i = 0;i<triangles.size();i++)
     {
@@ -345,6 +402,30 @@ std::vector<size_t> App::AdjacentTriangles(delaunator::Delaunator d, size_t tria
         }
     }
     return arr;
+}
+
+std::vector<std::size_t> App::AssociatedTriangles(Circle point)
+{
+    std::vector<std::size_t> returnArray = std::vector<std::size_t>();
+    // loop every triangle, check if any of their points is anchor point
+    for(std::size_t triIndex = 0; triIndex < triangles.size();triIndex++)
+    {
+        if(triangles[triIndex].a.x == point.x && triangles[triIndex].a.y == point.y)
+        {
+            returnArray.push_back(triIndex);
+            continue;
+        }
+        else if(triangles[triIndex].b.x == point.x && triangles[triIndex].b.y == point.y)
+        {
+            returnArray.push_back(triIndex);
+            continue;
+        }else if(triangles[triIndex].c.x == point.x && triangles[triIndex].c.y == point.y)
+        {
+            returnArray.push_back(triIndex);
+            continue;
+        }
+    }
+    return returnArray;
 }
 
 
