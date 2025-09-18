@@ -13,7 +13,7 @@ class Test_App
     public:
         const int WIDTH = 1080;
         const int HEIGHT = 720;
-        const int CIRCLECOUNT = 50;
+        const int CIRCLECOUNT = 100;
         const char* APPNAME = "Voronoi demo";
         SDL_Window *window;
         SDL_Renderer *renderer;
@@ -24,6 +24,7 @@ class Test_App
         std::vector<Circle> circumcenters;
         std::set<std::pair<int,int>> circumcenterSet;
         std::vector<Polygon> voronoiShapes;
+        
     public:
         Test_App();
         int OnExecute();
@@ -45,7 +46,7 @@ class Test_App
         std::vector<Edge> forEachTriangleEdge(std::vector<double> coords,delaunator::Delaunator delaunay);
         std::array<int,3> pointsOfTriangle(int t,delaunator::Delaunator delaunay);
         std::vector<int> trianglesAdjacentToTriangle(delaunator::Delaunator delaunay, int t); 
-        std::pair<int,int> circumcenter(SDL_Point a, SDL_Point b, SDL_Point c);
+        std::pair<double,double> circumcenter(Point a, Point b, Point c);
         std::pair<int,int> triangleCenter(std::vector<double> coords, delaunator::Delaunator d,int t);
         std::vector<int> edgesAroundPoint(delaunator::Delaunator d,int start);
         

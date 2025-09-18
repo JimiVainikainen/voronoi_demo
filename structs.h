@@ -5,6 +5,14 @@
 #include <cstdlib> 
 #include <time.h>
 #include <math.h>
+
+typedef struct 
+{
+    /* data */
+    double x;
+    double y;
+} Point;
+
 typedef struct
 {
     /* data */
@@ -16,7 +24,7 @@ typedef struct
     SDL_Point *points;
     int target_x = 0;
     int target_y = 0;
-    double speed = 1;
+    double speed = 0.5;
     void move()
     {
         // double dist = sqrt(pow((target_x-x),2)+(pow((target_y-y),2)));
@@ -41,7 +49,7 @@ typedef struct
     }
     void calculateNewTarget()
     {   
-        target_x = (rand() % max_x -1 ) + 1;
+        target_x = (rand() % max_x - 1) + 1;
         target_y = (rand() % max_y - 1) + 1;
         // std::cout << "x: " << x << std::endl;
         // std::cout << "y: " << y << std::endl;
@@ -55,15 +63,15 @@ typedef struct
 
 typedef struct
 {
-    SDL_Point point_a;
-    SDL_Point point_b;
+    Point point_a;
+    Point point_b;
 } Edge;
 
 typedef struct
 {
-    SDL_Point a;
-    SDL_Point b;
-    SDL_Point c;
+    Point a;
+    Point b;
+    Point c;
     
 } Triangle;
 
@@ -72,5 +80,8 @@ typedef struct
     std::vector<Edge> edges;
     SDL_Point center;
 } Polygon;
+
+
+
 
 #endif

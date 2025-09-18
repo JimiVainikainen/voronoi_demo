@@ -47,215 +47,42 @@ bool Test_App::OnInit()
     renderer = SDL_CreateRenderer(window,-1,0);
     points = new Circle[CIRCLECOUNT];
     srand(time(0));
-    Circle c0 = Circle();
-    c0.x = 0;
-    c0.y = 0;
-    points[0] = c0;
-    Circle c1 = Circle();
-    c1.x = 0;
-    c1.y = HEIGHT;
-    points[1] = c1;
-    Circle c2 = Circle();
-    c2.x = WIDTH;
-    c2.y = 0;
-    points[2] = c2;
-    Circle c3 = Circle();
-    c3.x = WIDTH;
-    c3.y = HEIGHT;
-    points[3] = c3;
-    for(int i=4;i<CIRCLECOUNT;i++)
+    
+    edges = std::vector<Edge>();
+    sdl_triangles = std::vector<Triangle>();
+    circumcenters = std::vector<Circle>();
+    circumcenterSet = std::set<std::pair<int,int>>();
+    
+    // Circle c0 = Circle();
+    // c0.x = 50;
+    // c0.y = 50;
+    // points[0] = c0;
+    // Circle c1 = Circle();
+    // c1.x = 50;
+    // c1.y = 400;
+    // points[1] = c1;
+    // Circle c2 = Circle();
+    // c2.x = 400;
+    // c2.y = 50;
+    // points[2] = c2;
+    // Circle c3 = Circle();
+    // c3.x = 400;
+    // c3.y = 400;
+    // points[3] = c3;
+    
+    for(int i=0;i<CIRCLECOUNT;i++)
     {
         Circle circle = Circle();
         circle.max_x = WIDTH;
         circle.max_y = HEIGHT;
         circle.radius = 5;
         circle.randomPos();
+        circle.calculateNewTarget();
         points[i] = circle;
     }
-    // Circle c0 = Circle();
-    // c0.x = 377;
-    // c0.y = 479;
-    // points[0] = c0;
-    // Circle c1 = Circle();
-    // c1.x = 453;
-    // c1.y = 434;
-    // points[1] = c1;
-    // Circle c2 = Circle();
-    // c2.x = 326;
-    // c2.y = 387;
-    // points[2] = c2;
-    // Circle c3 = Circle();
-    // c3.x = 444;
-    // c3.y = 359;
-    // points[3] = c3;
-    // Circle c4 = Circle();
-    // c4.x = 511;
-    // c4.y = 389;
-    // points[4] = c4;
-    // Circle c5 = Circle();
-    // c5.x = 586;
-    // c5.y = 429;
-    // points[5] = c5;
-    // Circle c6 = Circle();
-    // c6.x = 470;
-    // c6.y = 315;
-    // points[6] = c6;
-    // Circle c7 = Circle();
-    // c7.x = 622;
-    // c7.y = 493;
-    // points[7] = c7;
-    // Circle c8 = Circle();
-    // c8.x = 627;
-    // c8.y = 367;
-    // points[8] = c8;
-    // Circle c9 = Circle();
-    // c9.x = 570;
-    // c9.y = 314;
-    // points[9] = c9;
-
-    coords = std::vector<double>();
-    edges = std::vector<Edge>();
-    sdl_triangles = std::vector<Triangle>();
-    circumcenters = std::vector<Circle>();
-    circumcenterSet = std::set<std::pair<int,int>>();
-    for(int j=0;j<CIRCLECOUNT;j++)
-    {
-        coords.push_back(points[j].x);
-        coords.push_back(points[j].y);
-    }
-    delaunator::Delaunator d(coords);
     
 
-    std::set<int> seenPoints = std::set<int>();
-    for(int e=0;e<d.triangles.size();e++)
-    {
-
-        // MAKING EDGES
-        // if(d.halfedges.at(e) > d.halfedges.size())
-        // {
-        //     std::cout << "oops no half edge!" << e<< std::endl;
-        // }
-        // std::cout << d.triangles.at(e)<< std::endl;
-        // std::cout << d.triangles.at(nextHalfEdge(e))<< std::endl;
-        // std::cout << "-"<< std::endl;
-        // Edge edge = Edge();
-        // edge.point_a.x = coords.at(2*d.triangles.at(e));
-        // edge.point_a.y = coords.at(2*d.triangles.at(e)+1);
-
-        // edge.point_b.x = coords.at(2*d.triangles.at(nextHalfEdge(e)));
-        // edge.point_b.y = coords.at(2*d.triangles.at(nextHalfEdge(e))+1);
-        // edges.push_back(edge);
-        // if(d.halfedges.at(e) <= d.halfedges.size())
-        // {
-        //     // checks if there is no other half edge
-        // }
-
-        // MAKING TRIANGLES
-        // for(int t=0;t<d.triangles.size() / 3; t++)
-        // {
-        //     Triangle triangle = Triangle();
-        //     std::array<int,3> trianglePoints = pointsOfTriangle(t,d);
-        //     SDL_Point a = SDL_Point();
-        //     SDL_Point b = SDL_Point();
-        //     SDL_Point c = SDL_Point();
-        //     a.x = coords.at(2*trianglePoints.at(0));
-        //     a.y = coords.at(2*trianglePoints.at(0)+1);
-        //     b.x = coords.at(2*trianglePoints.at(1));
-        //     b.y = coords.at(2*trianglePoints.at(1)+1);
-        //     c.x = coords.at(2*trianglePoints.at(2));
-        //     c.y = coords.at(2*trianglePoints.at(2)+1);
-        //     triangle.a = a;
-        //     triangle.b = b;
-        //     triangle.c = c;
-        //     sdl_triangles.push_back(triangle);
-        // }
-
-        // MAKING VORONOI EDGES
-        // int opposite = static_cast<int>(d.halfedges.at(e));
-        // if(opposite == -1)
-        // {
-        //     std::cout <<  "-1!!!" << std::endl;
-        //     continue;
-        // }
-        // if(e < d.halfedges.at(e))
-        // {
-        //     std::pair<int,int> point_a = triangleCenter(coords,d,TriangleOfEdge(e));
-        //     std::pair<int,int> point_b = triangleCenter(coords,d,TriangleOfEdge(d.halfedges.at(e)));
-        //     Circle center = Circle();
-        //     center.x = point_a.first;
-        //     center.y = point_a.second;
-        //     circumcenterSet.insert(point_a);
-        //     circumcenterSet.insert(point_b);
-            
-           
-        //     Edge edge = Edge();
-        //     edge.point_a.x = point_a.first;
-        //     edge.point_a.y = point_a.second;
-        //     edge.point_b.x = point_b.first;
-        //     edge.point_b.y = point_b.second;
-        //     std::cout << TriangleOfEdge(e) << "->";
-        //     std::cout << TriangleOfEdge(d.halfedges.at(e));
-        //     // std::cout << point_a.first << "|" << point_a.second << " ->";
-        //     // std::cout << point_b.first << "|" << point_b.second << std::endl;
-        //     std::cout << "--" << std::endl;
-        //     edges.push_back(edge);
-        // }
-
-        int point = d.triangles.at(nextHalfEdge(e));
-        if(seenPoints.end() == seenPoints.find(point))
-        {
-            seenPoints.insert(point);
-            std::vector<int> voronoi_edges = edgesAroundPoint(d,e);
-            std::vector<int> tris  = std::vector<int>();
-            for(int i=0;i<voronoi_edges.size();i++)
-            {
-                tris.push_back(TriangleOfEdge(voronoi_edges.at(i)));
-            }
-            std::vector<std::pair<int,int>> verts = std::vector<std::pair<int,int>>();
-            std::cout<<tris.size() <<  " triangles" << std::endl;
-            for(int i=0;i<tris.size();i++)
-            {
-                verts.push_back(triangleCenter(coords,d,tris.at(i)));
-            }
-            int v = 0;
-            Polygon voronoiCell = Polygon();
-            std::cout<<verts.size() <<  " verts" << std::endl;
-            for(v=0;v<verts.size();v++)
-            {
-                Edge edge = Edge();
-                if(v == verts.size() -1)
-                {
-                    edge.point_a.x = verts.at(v).first;
-                    edge.point_a.y = verts.at(v).second;
-
-                    edge.point_b.x = verts.at(0).first;
-                    edge.point_b.y = verts.at(0).second;
-                }else
-                {
-                    edge.point_a.x = verts.at(v).first;
-                    edge.point_a.y = verts.at(v).second;
-
-                    edge.point_b.x = verts.at(v+1).first;
-                    edge.point_b.y = verts.at(v+1).second;
-                }
-                voronoiCell.edges.push_back(edge);
-            }
-            std::cout << "edge count: " << voronoiCell.edges.size() << std::endl;
-            voronoiShapes.push_back(voronoiCell);
-        }
-    }
-    std::cout << circumcenterSet.size() << "d" << std::endl;
-    std::set<std::pair<int,int>>::iterator itr;
-    for(itr = circumcenterSet.begin(); itr != circumcenterSet.end();itr++)
-    {
-        Circle center = Circle();
-        std::pair<int,int> value = (*itr);
-        center.x = value.first;
-        center.y = value.second;
-        circumcenters.push_back(center);
-    }
-
-    std::cout << voronoiShapes.size() << " cells" << std::endl;
+    //std::cout << voronoiShapes.size() << " cells" << std::endl;
     return true;
 }
 
@@ -299,6 +126,10 @@ std::array<int,3> Test_App::pointsOfTriangle(int t,delaunator::Delaunator delaun
     arr[0] = delaunay.triangles.at(3*t);
     arr[1] = delaunay.triangles.at(3*t+1);
     arr[2] = delaunay.triangles.at(3*t+2);
+    if (0 == arr[0] && 0 == arr[1] && 0 == arr[2])
+    {
+        std::cout << "0 triangle??" << std::endl;
+    }
     return arr;
 }
 
@@ -337,13 +168,13 @@ std::vector<int> Test_App::trianglesAdjacentToTriangle(delaunator::Delaunator de
     return adjacentTriangels;
 }
 
-std::pair<int,int> Test_App::circumcenter(SDL_Point a, SDL_Point b, SDL_Point c)
+std::pair<double,double> Test_App::circumcenter(Point a, Point b, Point c)
 {
-    int ad = a.x * a.x + a.y * a.y;
-    int bd = b.x * b.x + b.y * b.y;
-    int cd = c.x * c.x + c.y * c.y;
+    double ad = a.x * a.x + a.y * a.y;
+    double bd = b.x * b.x + b.y * b.y;
+    double cd = c.x * c.x + c.y * c.y;
 
-    int D = 2*
+    double D = 2*
         (
         a.x  * (b.y-c.y)
         +b.x * (c.y - a.y)
@@ -351,32 +182,37 @@ std::pair<int,int> Test_App::circumcenter(SDL_Point a, SDL_Point b, SDL_Point c)
         );
     if(D == 0)
     {
+        std::cout << "empty" << std::endl;
         return std::make_pair(0,0);
     }
-    int num_1 = (
+    double num_1 = (
         ad * (b.y-c.y)
         + bd * (c.y-a.y)
         + cd * (a.y - b.y)
     );
 
-    int num_2 = (
+    double num_2 = (
         ad * (c.x-b.x)
         + bd * (a.x-c.x)
         + cd * (b.x - a.x)
     );
 
-    int pair_1 = num_1 / D;
-    int pair_2 = num_2 / D;
-    std::pair<int,int> returnPair = std::pair<int,int>(pair_1,pair_2);
+    double pair_1 = num_1 / D;
+    double pair_2 = num_2 / D;
+    std::pair<double,double> returnPair = std::pair<double,double>(pair_1,pair_2);
+    if(pair_1 == 0 && pair_2 == 0)
+    {
+        std::cout << "pairs are 0" << std::endl;
+    }
     return returnPair;
 }
 
 std::pair<int,int> Test_App::triangleCenter(std::vector<double> coords, delaunator::Delaunator d,int t)
 {
     std::array<int,3>  triangle = pointsOfTriangle(t,d);
-    SDL_Point a = SDL_Point();
-    SDL_Point b = SDL_Point();
-    SDL_Point c = SDL_Point();
+    Point a = Point();
+    Point b = Point();
+    Point c = Point();
     a.x = coords.at(2*triangle.at(0));
     a.y = coords.at(2*triangle.at(0)+1);
 
@@ -403,8 +239,8 @@ std::vector<int> Test_App::edgesAroundPoint(delaunator::Delaunator d,int start)
     {
         // loop back to start, do while to ensue we do it at least once and begin the loop
         result.push_back(incoming);
-        int outgoing = nextHalfEdge(incoming);
-        incoming = d.halfedges.at(outgoing);
+        int outgoing = static_cast<int>(nextHalfEdge(incoming));
+        incoming = static_cast<int>(d.halfedges.at(outgoing));
     }while(incoming != -1 && incoming != start);
     return result;
 }
@@ -420,7 +256,81 @@ void Test_App::OnEvent(SDL_Event* event)
 
 void Test_App::OnLoop()
 {    
+    coords = std::vector<double>();
+    std::set<int> seenPoints = std::set<int>();
+    voronoiShapes = std::vector<Polygon>();
+    for(int point=4;point<CIRCLECOUNT;point++)
+    {
+       //points[point].move();
+    }
+    for(int j=0;j<CIRCLECOUNT;j++)
+    {
+        coords.push_back(points[j].x);
+        coords.push_back(points[j].y);
+    }
     
+    delaunator::Delaunator d(coords);
+
+    for(int e=0;e<d.triangles.size();e++)
+    {
+
+        int point = static_cast<int>(d.triangles.at(nextHalfEdge(e)));
+        if(seenPoints.end() == seenPoints.find(point))
+        {
+            seenPoints.insert(point);
+            std::vector<int> voronoi_edges = edgesAroundPoint(d,e);
+            std::vector<int> tris  = std::vector<int>();
+            for(int i=0;i<voronoi_edges.size();i++)
+            {
+                tris.push_back(TriangleOfEdge(voronoi_edges.at(i)));
+            }
+            std::vector<std::pair<double,double>> verts = std::vector<std::pair<double,double>>();
+            //std::cout<<tris.size() <<  " triangles" << std::endl;
+            for(int i=0;i<tris.size();i++)
+            {
+                verts.push_back(triangleCenter(coords,d,tris.at(i)));
+            }
+            int v = 0;
+            Polygon voronoiCell = Polygon();
+            //std::cout<<verts.size() <<  " verts" << std::endl;
+            for(v=0;v<verts.size();v++)
+            {
+                Edge edge = Edge();
+                if(verts.at(v).first == 0 && verts.at(v).second == 0)
+                {
+                    //std::cout << "!" << v << "goes to 0" << std::endl;
+                }
+                if(v == verts.size() -1)
+                {
+                    edge.point_a.x = verts.at(v).first;
+                    edge.point_a.y = verts.at(v).second;
+
+                    edge.point_b.x = verts.at(0).first;
+                    edge.point_b.y = verts.at(0).second;
+                }else
+                {
+                    edge.point_a.x = verts.at(v).first;
+                    edge.point_a.y = verts.at(v).second;
+
+                    edge.point_b.x = verts.at(v+1).first;
+                    edge.point_b.y = verts.at(v+1).second;
+                }
+                voronoiCell.edges.push_back(edge);
+            }
+            //std::cout << "edge count: " << voronoiCell.edges.size() << std::endl;
+            voronoiShapes.push_back(voronoiCell);
+        }
+    }
+    //std::cout << circumcenterSet.size() << "d" << std::endl;
+    std::set<std::pair<int,int>>::iterator itr;
+    for(itr = circumcenterSet.begin(); itr != circumcenterSet.end();itr++)
+    {
+        Circle center = Circle();
+        std::pair<int,int> value = (*itr);
+        center.x = value.first;
+        center.y = value.second;
+        circumcenters.push_back(center);
+    }
 }
 
 void Test_App::OnRender()
@@ -428,10 +338,14 @@ void Test_App::OnRender()
     SDL_SetRenderDrawColor(renderer,0,0,0,255);
     SDL_RenderClear(renderer);
     SDL_SetRenderDrawColor(renderer,255,255,255,255);
-    // for (int point = 0;point < CIRCLECOUNT;point++)
-    // {
-    //     SDL_DrawCircle(renderer,points[point]);
-    // }
+    for(int i=0;i<voronoiShapes.size();i++)
+    {
+        SDL_DrawPolygon(renderer,voronoiShapes.at(i));
+    }
+    for (int point = 0;point < CIRCLECOUNT;point++)
+    {
+        SDL_DrawCircle(renderer,points[point]);
+    }
     SDL_SetRenderDrawColor(renderer,0,255,255,255);
     for(int c = 0;c < circumcenters.size();c++)
     {
@@ -448,11 +362,6 @@ void Test_App::OnRender()
     for(int tri = 0; tri < sdl_triangles.size();tri++)
     {
         SDL_DrawTriangle(renderer,sdl_triangles.at(tri),tri);
-    }
-    //SDL_DrawPolygon(renderer,voronoiShapes.at(0));
-    for(int i=0;i<voronoiShapes.size();i++)
-    {
-        SDL_DrawPolygon(renderer,voronoiShapes.at(i));
     }
     SDL_RenderPresent(renderer);
     
@@ -518,6 +427,67 @@ void Test_App::SDL_DrawCircle(SDL_Renderer* renderer, Circle circle)
 void Test_App::SDL_DrawPolygon(SDL_Renderer* renderer,Polygon polygon)
 {
     
+    if(polygon.edges.size() >= 3)
+    {
+        int start = 0;
+        int second = 1;
+        int last = 2;
+        SDL_Color color = {100,100,100,255};
+        while(last > 0 && second > 0)
+        {
+            std::vector<SDL_Vertex> verts;
+            verts = 
+            {
+                {SDL_FPoint{static_cast<float>(polygon.edges.at(start).point_a.x),static_cast<float>(polygon.edges.at(start).point_a.y)},color,SDL_FPoint{0},},
+                {SDL_FPoint{static_cast<float>(polygon.edges.at(second).point_a.x),static_cast<float>(polygon.edges.at(second).point_a.y)},color,SDL_FPoint{0},},
+                {SDL_FPoint{static_cast<float>(polygon.edges.at(last).point_a.x),static_cast<float>(polygon.edges.at(last).point_a.y)},color,SDL_FPoint{0},}
+            };
+            SDL_RenderGeometry(renderer,nullptr,verts.data(),verts.size(),nullptr,0);
+            last++;
+            second++;
+            if(last >= polygon.edges.size())
+            {
+                //std::cout << "end " << std::endl;
+                last = 0;
+            }
+        }
+    }
+    // for(int i=0;i<polygon.edges.size();i++)
+    // {
+    //     std::vector<SDL_Vertex> verts;
+    //     SDL_Color color = {100,100,100,255};
+    //     if(i == polygon.edges.size() - 1)
+    //     {
+    //         // i is last
+    //         verts = 
+    //         {
+    //             {SDL_FPoint{static_cast<float>(polygon.edges.at(i).point_a.x),static_cast<float>(polygon.edges.at(i).point_a.y)},color,SDL_FPoint{0},},
+    //             {SDL_FPoint{static_cast<float>(polygon.edges.at(0).point_a.x),static_cast<float>(polygon.edges.at(0).point_a.y)},color,SDL_FPoint{0},},
+    //             {SDL_FPoint{static_cast<float>(polygon.edges.at(1).point_a.x),static_cast<float>(polygon.edges.at(1).point_a.y)},color,SDL_FPoint{0},}
+    //         };
+    //     }else if (i == polygon.edges.size() - 2)
+    //     {
+    //         // i second last
+    //         verts = 
+    //         {
+    //             {SDL_FPoint{static_cast<float>(polygon.edges.at(i).point_a.x),static_cast<float>(polygon.edges.at(i).point_a.y)},color,SDL_FPoint{0},},
+    //             {SDL_FPoint{static_cast<float>(polygon.edges.at(i+1).point_a.x),static_cast<float>(polygon.edges.at(i+1).point_a.y)},color,SDL_FPoint{0},},
+    //             {SDL_FPoint{static_cast<float>(polygon.edges.at(0).point_a.x),static_cast<float>(polygon.edges.at(0).point_a.y)},color,SDL_FPoint{0},}
+    //         };
+    //     }else
+    //     {
+    //         // 3 more is after
+    //         verts = 
+    //         {
+    //             {SDL_FPoint{static_cast<float>(polygon.edges.at(i).point_a.x),static_cast<float>(polygon.edges.at(i).point_a.y)},color,SDL_FPoint{0},},
+    //             {SDL_FPoint{static_cast<float>(polygon.edges.at(i+1).point_a.x),static_cast<float>(polygon.edges.at(i+1).point_a.y)},color,SDL_FPoint{0},},
+    //             {SDL_FPoint{static_cast<float>(polygon.edges.at(i+2).point_a.x),static_cast<float>(polygon.edges.at(i+2).point_a.y)},color,SDL_FPoint{0},}
+    //         };
+    //     }
+    //     SDL_RenderGeometry(renderer,nullptr,verts.data(),verts.size(),nullptr,0);
+        
+    // }
+
     for(int i=0;i<polygon.edges.size();i++)
     {
         SDL_DrawEdge(renderer,polygon.edges.at(i));
