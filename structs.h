@@ -5,13 +5,25 @@
 #include <cstdlib> 
 #include <time.h>
 #include <math.h>
+#include <optional>
 
 typedef struct 
 {
     /* data */
-    double x;
-    double y;
+    double x = 0;
+    double y = 0;
+    bool valid()
+    {
+        return x >= 0 && y >= 0;
+    }
 } Point;
+
+typedef struct
+{
+    std::optional<Point> center;
+    int edge;
+} VoronoiVertex;
+
 
 typedef struct
 {
@@ -77,8 +89,10 @@ typedef struct
 
 typedef struct
 {
+    
     std::vector<Edge> edges;
     SDL_Point center;
+    std::vector<Point> vertices;
 } Polygon;
 
 
