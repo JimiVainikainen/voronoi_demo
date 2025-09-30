@@ -65,12 +65,12 @@ class Test_App
         Point segmentBoxIntersection(Point& p1, Point& p2);
         Point intersectEdge(Point& a, Point& b,char axis,double value);
         std::vector<Point> clipPolygonToBox(std::vector<Point>& polygon);
-        std::vector<Point> getEdgesOfPoints(Point& a, Point& b);
+        std::vector<Point> getCornersBetweenPoints(Point& a, Point& b);
         int edgeCornerIndex(const Point& p);
         int finalBoundaryEdgeAroundPoint(int pointIndex, delaunator::Delaunator& d);
         std::vector<VoronoiVertex> clipEdgeVoronoi(const std::vector<VoronoiVertex> &input, int edge, double boundary);
         std::vector<VoronoiVertex> clipVoronoiPolygon(const std::vector<VoronoiVertex> &polygon, double minx, double maxx, double miny, double maxy);
-        
+        std::vector<VoronoiVertex> ClockWiseSorting(const std::vector<VoronoiVertex>& polygon, const Point& centerPoint);
     };
 #endif
 
