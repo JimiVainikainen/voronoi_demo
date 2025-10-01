@@ -91,7 +91,7 @@ typedef struct
 {
     
     std::vector<Edge> edges;
-    SDL_Point center;
+    Point center;
     std::vector<Point> vertices;
 } Polygon;
 

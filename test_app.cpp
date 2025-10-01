@@ -235,7 +235,6 @@ bool Test_App::OnInit()
     
     delaunator::Delaunator d(coords);
     
-
     int triangleCount = d.triangles.size() / 3;
     std::vector<Point> centers = std::vector<Point>(triangleCount);
     for(int t=0;t<triangleCount;t++)
@@ -254,53 +253,93 @@ bool Test_App::OnInit()
         c.y = coords.at(2*i2+1);
         centers.at(t) = circumcenter(a,b,c);
     }
-    //centers = clipPolygon(centers,0,WIDTH,0,HEIGHT);
     std::vector<Polygon> cells(coords.size()/2);
-    //int edge = cellvertices.at(idx).edge; // edge on the boundary that has no opposite
    
     int counter = 0;
     for(int i=0;i<(int)(coords.size()/2);i++)
     {
+        Point polygonCenter = {coords.at(2*i),coords.at(2*i+1)};
         std::cout << std::endl;
         auto cellvertices = collectVoronoiCell(i,d,centers);
         std::vector<VoronoiVertex> finalCell;
         std::vector<VoronoiVertex> edgeVertices;
+        std::vector<std::pair<VoronoiVertex,int>> edgeVerts;
         for(size_t idx = 0;idx < cellvertices.size();idx++)
         {
             
             
             if(!cellvertices.at(idx).center.has_value())
             {
-                // hull boundary edge
-                //std::cout << "count:" << counter << std::endl;
-                //std::cout << "at: " << voronoiShapes.size() - 1 << std::endl;
                 std::cout << "edge: " << cellvertices.at(idx).edge << "has not opposite: " << std::endl; 
                 Point intersection = rayIntersectionPoint(cellvertices.at(idx).edge,d,coords,centers);
                 VoronoiVertex vert = {intersection,0};
-                edgeVertices.push_back(vert);
+                // THIS ALREADY INTERCEPTS THE SIDE AND CAN BE DETECTED
+                std::cout << "rayPoint: " << vert.center.value().x << "," << vert.center.value().y << std::endl;;
+                int boundary = onTheBoundary(vert);
+                if(boundary != -1)
+                {
+                    edgeVerts.push_back({vert,boundary});
+                }
                 finalCell.push_back(vert);
-                // calculate the same intersection for this edge as well and insert that 
-                // finally calculate if any corners need to be added as well
             }else
             {
+                // THIS CAN BE OVER THE BOUNDARY
+                std::cout << "point: " << cellvertices.at(idx).center.value().x << "," << cellvertices.at(idx).center.value().y << std::endl;
+                Point direction = {cellvertices.at(idx).center.value().x - polygonCenter.x,cellvertices.at(idx).center.value().y - polygonCenter.y};
                 finalCell.push_back(cellvertices.at(idx));
+                if(isOutOfBounds(cellvertices.at(idx).center.value()))
+                {
+                    int side = computeSideBeforeClipping(polygonCenter,direction);
+                    if(side != -1)
+                    {
+                        edgeVerts.push_back({cellvertices.at(idx),side});
+                    }
+                }
             }
             
         }
-        //cellvertices = clipVoronoiPolygon(finalCell,0,WIDTH,0,HEIGHT);
-        if(edgeVertices.size() == 2)
+        if(edgeVerts.size() >= 2)
         {
-            // get edges
-            std::vector<Point> corners = getCornersBetweenPoints(edgeVertices.at(0).center.value(),edgeVertices.at(1).center.value());
-            for(int corner = 0;corner<corners.size();corner++)
+            std::cout << "all the sides:" << std::endl;
+            for(int i=0;i<edgeVerts.size();i++)
             {
-                VoronoiVertex cornerVertex = {corners.at(corner),-1};
-                finalCell.push_back(cornerVertex);
+                std::cout << edgeVerts.at(i).second << std::endl;
             }
+            size_t n = edgeVerts.size();
+            for(size_t i=0;i<n;i++)
+            {
+                // get pairs
+                auto pair1 = edgeVerts.at(i);
+                auto pair2 = edgeVerts.at((i+1) % n);
+                int side1 = pair1.second;
+                int side2 = pair2.second;
+                if(side1 == side2) continue;
+                // get corners between them
+                int diff = (side2-side1 + 4) % 4;
+                if(diff == 0) continue;
+                if(diff > 2)
+                {
+                    std::swap(side1,side2);
+                }
+
+                auto corners = cornersBetweenSides(side1,side2);
+                if(corners.empty()) continue;
+                std::cout << "corners:" << std::endl;
+                for(size_t corner = 0;corner < corners.size();corner++)
+                {
+                    std::cout << corners.at(corner).x << "," << corners.at(corner).y << std::endl;
+                    finalCell.push_back({corners.at(corner),0});
+                }
+                // add the corners
+                // go to next pair
+            }
+
+
+        }else
+        {
+            std::cout << "size: " << edgeVerts.size() << std::endl;
         }
-        Point polygonCenter = {coords.at(2*i),coords.at(2*i+1)};
-        std::cout << "point: " << polygonCenter.x << "," << polygonCenter.y << std::endl;
-        //finalCell = ClockWiseSorting(finalCell,polygonCenter);
+        
         cellvertices = clipVoronoiPolygon(finalCell,0,WIDTH,0,HEIGHT);
         cellvertices = ClockWiseSorting(cellvertices,polygonCenter);
         Polygon poly;
@@ -313,6 +352,8 @@ bool Test_App::OnInit()
                 poly.vertices.push_back(v.center.value());
             } 
         }
+        poly.center = polygonCenter;
+        std::cout << poly.center.x << "," << poly.center.y << std::endl;
         voronoiShapes.push_back(poly);
     }
     
@@ -721,6 +762,109 @@ std::vector<VoronoiVertex> Test_App::ClockWiseSorting(const std::vector<VoronoiV
     return rValue;
 }
 
+int Test_App::onTheBoundary(const VoronoiVertex &vertex)
+{
+    if(!vertex.center.has_value())
+    {
+        return -1;
+    }
+    // values
+    // -1 wrong value
+    // 1 top side
+    // 2 right side
+    // 3 bottom side
+    // 4 left side
+    // 5 corner
+    std::vector<int> sideCount;
+    int returnvalue = -1;
+    if(vertex.center.value().y == 0)
+    {
+        return 1;
+    }else if(vertex.center.value().x == WIDTH)
+    {
+        return 2;
+    }else if(vertex.center.value().y == HEIGHT)
+    {
+        return 3;
+    }else if(vertex.center.value().x == 0)
+    {
+        return 0;
+    }
+    return -1;
+}
+
+int Test_App::computeSideBeforeClipping(const Point &origin, const Point &direction)
+{
+    double tMin = std::numeric_limits<double>::infinity();
+    int side = -1;
+
+    // Left
+    if (direction.x != 0) {
+        double t = (0 - origin.x) / direction.x;
+        double y = origin.y + t * direction.y;
+        if (t > 0 && y >= 0 && y <= HEIGHT && t < tMin) {
+            tMin = t;
+            side = 0;
+        }
+    }
+    // Right
+    if (direction.x != 0) {
+        double t = (WIDTH - origin.x) / direction.x;
+        double y = origin.y + t * direction.y;
+        if (t > 0 && y >= 0 && y <= HEIGHT && t < tMin) {
+            tMin = t;
+            side = 2;
+        }
+    }
+    // Top
+    if (direction.y != 0) {
+        double t = (0 - origin.y) / direction.y;
+        double x = origin.x + t * direction.x;
+        if (t > 0 && x >= 0 && x <= WIDTH && t < tMin) {
+            tMin = t;
+            side = 1;
+        }
+    }
+    // Bottom
+    if (direction.y != 0) {
+        double t = (HEIGHT - origin.y) / direction.y;
+        double x = origin.x + t * direction.x;
+        if (t > 0 && x >= 0 && x <= WIDTH && t < tMin) {
+            tMin = t;
+            side = 3;
+        }
+    }
+
+    return side;
+}
+
+bool Test_App::isOutOfBounds(const Point &p)
+{
+    return p.x > WIDTH ||p.x < 0 || p.y > HEIGHT ||p.y < 0;
+}
+
+std::vector<Point> Test_App::cornersBetweenSides(int sideA, int sideB)
+{
+    std::vector<Point> corners;
+
+    // Clockwise side traversal
+    int s = sideA;
+    while (s != sideB) {
+        switch (s) {
+            case 0: corners.push_back({0, 0}); break;                 // top-left
+            case 1: corners.push_back({double(WIDTH), 0}); break;             // top-right
+            case 2: corners.push_back({double(WIDTH), double(HEIGHT)}); break;        // bottom-right
+            case 3: corners.push_back({0, double(HEIGHT)}); break;            // bottom-left
+        }
+        s = (s + 1) % 4;
+
+        // Break loop if somehow invalid (infinite protection)
+        if (corners.size() > 4) break;
+    }
+
+    return corners;
+}
+
 std::vector<VoronoiVertex> Test_App::collectVoronoiCell(int i, delaunator::Delaunator &d, std::vector<Point> triangleCenters)
 {
     std::vector<std::size_t> triangles = d.triangles;
@@ -744,21 +888,9 @@ std::vector<VoronoiVertex> Test_App::collectVoronoiCell(int i, delaunator::Delau
     // Backward traversal
     while (true) {
 
-        std::cout << "current vertices: {";
-        for(int i=0;i<cellVertices.size();i++)
-        {
-            if(cellVertices.at(i).center.has_value())
-            {
-                std::cout <<"[" << cellVertices.at(i).center.value().x << "," << cellVertices.at(i).center.value().y << " / " << cellVertices.at(i).edge << "] ";
-            }else
-            {
-                std::cout <<"[" << "invalid, invalid " << " / " << cellVertices.at(i).edge << "] ";
-            }
-        }
-        std::cout << "}" << std::endl;
-
         int t = TriangleOfEdge(e);
         const Point& center = triangleCenters.at(t);
+        
         //circumcenterSet.insert(std::make_pair<int,int>(center.x,center.y));
         int currOpposite = static_cast<int>(d.halfedges.at(e));
         int prevE = prevHalfEdge(e);
@@ -768,17 +900,31 @@ std::vector<VoronoiVertex> Test_App::collectVoronoiCell(int i, delaunator::Delau
             cellVertices.insert(cellVertices.begin(), {center, e}); // prepend for correct ordering
         }else
         {
-            Point p;
-            p.x = double(center.x);
-            p.y = double(center.y);
-            visited.insert(e);
-            cellVertices.insert(cellVertices.begin(), {std::nullopt, e}); 
-            cellVertices.insert(cellVertices.begin(), {p,e});
+            if(center.x < 0 || center.x > WIDTH || center.y < 0 ||center.y > HEIGHT)
+            {
+                std::cout << "uh oh its over the bounds, skip this one:" << center.x << "," << center.y << std::endl;
+            }else
+            {
+                std::cout << "withing bounding box, add this one" << std::endl;
+                Point p;
+                p.x = double(center.x);
+                p.y = double(center.y);
+                visited.insert(e);
+                cellVertices.insert(cellVertices.begin(), {std::nullopt, e}); 
+            }
+            //cellVertices.insert(cellVertices.begin(), {p,e});
         }
         int opposite = static_cast<int>(halfedges.at(prevE));
         if (opposite == -1) {
             boundary = true;
-            cellVertices.insert(cellVertices.begin(), {std::nullopt, prevE});
+            if(center.x < 0 || center.x > WIDTH || center.y < 0 ||center.y > HEIGHT)
+            {
+                std::cout << "uh oh its over the bounds, skip this one:" << center.x << "," << center.y << std::endl;
+            }else
+            {
+
+                cellVertices.insert(cellVertices.begin(), {std::nullopt, prevE});
+            }
             break;
         }
         if (visited.count(opposite) > 0) break;
@@ -790,6 +936,8 @@ std::vector<VoronoiVertex> Test_App::collectVoronoiCell(int i, delaunator::Delau
         // forward traversal
         // if bt started at edge say 13, we start at opposite and go other way around
         e = static_cast<int>(d.halfedges.at(firstEdge));
+        int t1 = TriangleOfEdge(e);
+        const Point& center1 = triangleCenters.at(t1);
         if(e == -1)
         {
             if(visited.count(firstEdge) > 0 )
@@ -798,7 +946,14 @@ std::vector<VoronoiVertex> Test_App::collectVoronoiCell(int i, delaunator::Delau
                 return cellVertices;
             }else
             {
-                cellVertices.insert(cellVertices.end(),{std::nullopt,firstEdge});
+                if(center1.x < 0 || center1.x > WIDTH || center1.y < 0 ||center1.y > HEIGHT)
+                {
+                    std::cout << "uh oh its over the bounds, skip this one:" << center1.x << "," << center1.y << std::endl;
+                }else
+                {
+                    std::cout << "this ones good" << std::endl;
+                    cellVertices.insert(cellVertices.end(),{std::nullopt,firstEdge});
+                }
                 return cellVertices;
             }
         }
@@ -812,7 +967,14 @@ std::vector<VoronoiVertex> Test_App::collectVoronoiCell(int i, delaunator::Delau
             int opposite = static_cast<int>(d.halfedges.at(nextE));
             if(opposite == -1)
             {
-                cellVertices.insert(cellVertices.end(),{std::nullopt,nextE});
+                if(center1.x < 0 || center1.x > WIDTH || center1.y < 0 ||center1.y > HEIGHT)
+                {
+                    std::cout << "uh oh its over the bounds, skip this one:" << center1.x << "," << center1.y << std::endl;
+                }else
+                {
+                    std::cout << "this ones good" << std::endl;
+                    cellVertices.insert(cellVertices.end(),{std::nullopt,nextE});
+                }
                 break;
             }
             if(visited.count(opposite) > 0) break;
@@ -1060,10 +1222,10 @@ void Test_App::OnRender()
         SDL_DrawPolygon(renderer,voronoiShapes.at(i),i);
     }
 
-    for (int point = 0;point < CIRCLECOUNT;point++)
-    {
-        SDL_DrawCircle(renderer,points[point]);
-    }
+    // for (int point = 0;point < CIRCLECOUNT;point++)
+    // {
+    //     SDL_DrawCircle(renderer,points[point]);
+    // }
     SDL_SetRenderDrawColor(renderer,0,255,255,255);
     for(int c = 0;c < circumcenters.size();c++)
     {
@@ -1078,7 +1240,7 @@ void Test_App::OnRender()
     SDL_SetRenderDrawColor(renderer,255,0,0,255);
 
     // drawing the voronoi triangles
-    //SDL_DrawTriangle(renderer,sdl_triangles.at(0),0);
+    // SDL_DrawTriangle(renderer,sdl_triangles.at(0),0);
     // for(int tri = 0; tri < sdl_triangles.size();tri++)
     // {
     //     SDL_DrawTriangle(renderer,sdl_triangles.at(tri),tri);
@@ -1089,10 +1251,10 @@ void Test_App::OnRender()
     // {
     //     SDL_DrawEdge(renderer,rays.at(i));
     // }
-    for(int i=0;i<allVertices.size();i++)
-    {
-        SDL_DrawCircle(renderer,allVertices.at(i));
-    }
+    // for(int i=0;i<allVertices.size();i++)
+    // {
+    //     SDL_DrawCircle(renderer,allVertices.at(i));
+    // }
     SDL_RenderPresent(renderer);
     
 }
@@ -1146,11 +1308,18 @@ void Test_App::SDL_DrawCircle(SDL_Renderer* renderer, const Circle& circle)
     }
 }
 
-void Test_App::SDL_DrawPolygon(SDL_Renderer* renderer,const Polygon& polygon, int count)
+void Test_App::SDL_DrawPolygon(SDL_Renderer* renderer,const Polygon& polygon, int c)
 {
+    SDL_Color color;
+    double y = polygon.center.y;
+    uint8_t r = 10 * c;
+    uint8_t g = 0;
+    uint8_t b = 0;
+    color = {r,g,b,255};
+
     if (polygon.vertices.size() >= 3) 
     {
-        SDL_Color color = {static_cast<Uint8>(10 * count), 0, 0, 255};
+        //SDL_Color color = {static_cast<Uint8>(10), 0, 0, 255};
 
         for (int i = 1; i < static_cast<int>(polygon.vertices.size()) - 1; ++i) {
             std::array<SDL_Vertex, 3> triangle = {

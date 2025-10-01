@@ -38,7 +38,7 @@ class Test_App
         void SDL_DrawCircle(SDL_Renderer* renderer, const Circle& circle);
         void SDL_DrawTriangle(SDL_Renderer* renderer, const Triangle& triangle,int color);
         void SDL_DrawEdge(SDL_Renderer* renderer, const Edge&);
-        void SDL_DrawPolygon(SDL_Renderer* renderer,const Polygon& polygon, int count);
+        void SDL_DrawPolygon(SDL_Renderer* renderer,const Polygon& polygon, int c);
     private:
         bool isRunning;
         std::array<int,3> EdgesOfTriangle(int t); // return indeces of edges of triangle
@@ -71,6 +71,10 @@ class Test_App
         std::vector<VoronoiVertex> clipEdgeVoronoi(const std::vector<VoronoiVertex> &input, int edge, double boundary);
         std::vector<VoronoiVertex> clipVoronoiPolygon(const std::vector<VoronoiVertex> &polygon, double minx, double maxx, double miny, double maxy);
         std::vector<VoronoiVertex> ClockWiseSorting(const std::vector<VoronoiVertex>& polygon, const Point& centerPoint);
+        int onTheBoundary(const VoronoiVertex& vertex);
+        int computeSideBeforeClipping(const Point& origin, const Point& direction);
+        bool isOutOfBounds(const Point& p);
+        std::vector<Point> cornersBetweenSides(int sideA,int sideB);
     };
 #endif
 
